@@ -175,73 +175,66 @@ def plot_error_function(theta_values, error_values, best_theta, chosen_theta, h)
     return fig
 
 
-def plot_feasible_region(h, chosen_theta, chosen_v0, best_theta, best_v0):
+def plot_feasible_region(h, chosen_theta, chosen_v0, best_theta, best_v0,
+                         grid_angles, grid_velocities, success_matrix):
     """
     Plots a 2D map of release angle vs. velocity, coloring the success (made) zone.
     Overlays the center-shot velocity line.
-    
+
+    The grid data is computed externally (cached) and passed in to avoid
+    repeating the expensive nested loop on every Streamlit rerun.
+
     Parameters:
         h (float): Hoop height minus release height.
         chosen_theta (float): Selected release angle in degrees.
         chosen_v0 (float): Selected velocity in m/s.
         best_theta (float): Optimal release angle in degrees.
         best_v0 (float): Velocity in m/s at the optimal release angle.
-        
+        grid_angles (array): 1-D array of angle values used in the grid.
+        grid_velocities (array): 1-D array of velocity values used in the grid.
+        success_matrix (ndarray): 2-D array (velocities × angles), 1 = made, 0 = miss.
+
     Returns:
         fig: Matplotlib figure object.
     """
     fig, ax = plt.subplots(figsize=(8.5, 4.5))
-    
-    # Generate meshgrid of angles and velocities
-    angles = np.arange(35.0, 75.1, 0.5)
-    velocities = np.arange(5.5, 10.0, 0.05)
-    
-    # Prepare matrix to store results
-    # 0 = Miss, 1 = Made
-    success_matrix = np.zeros((len(velocities), len(angles)))
-    
-    for i, v in enumerate(velocities):
-        for j, theta in enumerate(angles):
-            shot = bm.check_shot(theta, v, h)
-            if shot['result'] == 'made':
-                success_matrix[i, j] = 1.0
-                
-    # Plot the success region
-    extent = [angles[0], angles[-1], velocities[0], velocities[-1]]
+
+    # Plot the pre-computed success region
+    extent = [grid_angles[0], grid_angles[-1], grid_velocities[0], grid_velocities[-1]]
     ax.imshow(success_matrix, extent=extent, origin='lower', aspect='auto', cmap='Greens', alpha=0.45)
-    
+
     # Plot the center-hoop required velocity curve
     center_angles = np.arange(40.0, 75.1, 0.2)
     center_velocities = []
     valid_center_angles = []
-    
+
     for theta in center_angles:
         v = bm.required_v0(theta, h)
-        if v is not None and velocities[0] <= v <= velocities[-1]:
+        if v is not None and grid_velocities[0] <= v <= grid_velocities[-1]:
             center_velocities.append(v)
             valid_center_angles.append(theta)
-            
-    ax.plot(valid_center_angles, center_velocities, color='darkgreen', linestyle='-', linewidth=2, 
+
+    ax.plot(valid_center_angles, center_velocities, color='darkgreen', linestyle='-', linewidth=2,
             label='Center-Hoop Shot Line')
-            
+
     # Mark the user's selected shot
     chosen_shot = bm.check_shot(chosen_theta, chosen_v0, h)
     chosen_marker_color = COLOR_MADE if chosen_shot['result'] == 'made' else COLOR_MISS
-    ax.plot(chosen_theta, chosen_v0, '*', color=chosen_marker_color, markersize=12, markeredgecolor='black', 
+    ax.plot(chosen_theta, chosen_v0, '*', color=chosen_marker_color, markersize=12, markeredgecolor='black',
             label=f"Selected Shot ({chosen_theta:.1f}°, {chosen_v0:.2f} m/s)")
-            
+
     # Mark the optimal shot
     ax.plot(best_theta, best_v0, 'o', color=COLOR_OPTIMAL, markersize=8, markeredgecolor='black',
             label=f"Optimal Shot ({best_theta:.1f}°, {best_v0:.2f} m/s)")
-            
+
     # Labels and legend
     ax.set_xlabel('Release Angle (degrees)', fontsize=10)
     ax.set_ylabel('Release Velocity (m/s)', fontsize=10)
     ax.set_title('Feasible Region (Green Zone = Success)', fontsize=11, fontweight='bold')
-    
+
     ax.set_xlim(35.0, 75.0)
     ax.set_ylim(5.5, 10.0)
     ax.grid(True, linestyle=':', alpha=0.5)
     ax.legend(loc='upper right', fontsize=8)
-    
+
     return fig

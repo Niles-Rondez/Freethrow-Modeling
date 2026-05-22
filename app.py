@@ -13,6 +13,45 @@ import basketball_model as bm
 import optimizer as opt
 import visualization as viz
 
+
+# ---------------------------------------------------------------------------
+# Cached computation helpers
+# st.cache_data memoises results keyed by arguments, so heavy grid searches
+# only re-run when the shooter height (h) or angle actually changes.
+# ---------------------------------------------------------------------------
+
+@st.cache_data
+def cached_find_optimal_angle(h):
+    """Grid-search for the angle that maximises the error margin."""
+    return opt.find_optimal_angle(h)
+
+
+@st.cache_data
+def cached_error_curve(h):
+    """Compute error margin for every angle in the display range."""
+    angles = np.arange(40.0, 75.1, 0.2)
+    errors = np.array([opt.compute_error_margin(a, h) for a in angles])
+    return angles, errors
+
+
+@st.cache_data
+def cached_feasible_grid(h):
+    """Evaluate the 2-D success grid (angle x velocity) once per height."""
+    angles = np.arange(35.0, 75.1, 0.5)
+    velocities = np.arange(5.5, 10.0, 0.05)
+    grid = np.zeros((len(velocities), len(angles)))
+    for i, v in enumerate(velocities):
+        for j, theta in enumerate(angles):
+            if bm.check_shot(theta, v, h)['result'] == 'made':
+                grid[i, j] = 1.0
+    return angles, velocities, grid
+
+
+@st.cache_data
+def cached_heights_table():
+    """Build the comparison table across all standard player heights."""
+    return opt.get_optimal_heights_table()
+
 # Set page configuration
 st.set_page_config(
     page_title="Basketball Free Throw Simulator",
@@ -161,8 +200,8 @@ else:
         help="Initial speed of the ball in meters per second."
     )
 
-# Calculate optimal parameters for display in sidebar/main area
-best_theta, best_error, best_v0, t_low, t_high = opt.find_optimal_angle(h)
+# Calculate optimal parameters (cached per shooter height)
+best_theta, best_error, best_v0, t_low, t_high = cached_find_optimal_angle(h)
 
 # Quick Sidebar Action
 st.sidebar.markdown("---")
@@ -235,70 +274,72 @@ with tab1:
         "This plot displays the flight path of the basketball from the shooter's release point "
         "to the basket. The hoop rim is represented by the orange line, and the backboard by the gray vertical bar."
     )
-    
-    # Generate and display the trajectory plot
-    fig_traj = viz.plot_trajectory(chosen_theta, chosen_v0, h, result, min_d, r_edge, shooter_height_m)
+
+    with st.spinner("Simulating trajectory..."):
+        fig_traj = viz.plot_trajectory(
+            chosen_theta, chosen_v0, h, result, min_d, r_edge, shooter_height_m
+        )
     st.pyplot(fig_traj)
-    
+
     # Math explanation metrics
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Horizontal Distance (l)", f"{bm.l} m", help="Distance to hoop center")
     with col2:
-        st.metric("Landing Center (x_land)", f"{r_edge - bm.Db/2:.3f} m", 
+        st.metric("Landing Center (x_land)", f"{r_edge - bm.Db/2:.3f} m",
                   delta=f"{((r_edge - bm.Db/2) - bm.l):.3f} m from Center")
     with col3:
-        st.metric("Min Front Rim Clearance", f"{min_d:.3f} m", 
-                  delta=f"{(min_d - bm.Db/2):.3f} m margin", delta_color="normal" if min_d > bm.Db/2 else "inverse")
+        st.metric("Min Front Rim Clearance", f"{min_d:.3f} m",
+                  delta=f"{(min_d - bm.Db/2):.3f} m margin",
+                  delta_color="normal" if min_d > bm.Db/2 else "inverse")
 
 with tab2:
     st.subheader("Release Angle Error Margin")
     st.markdown(
         "For a given height, each release angle has a corresponding speed that makes a perfect center shot. "
-        "However, human players aren't perfect. This plot shows how much **release angle error (± degrees)** "
+        "However, human players aren't perfect. This plot shows how much **release angle error (\u00b1 degrees)** "
         "the shooter is allowed before missing the shot. The peak represents the most forgiving release angle."
     )
-    
-    # Generate error curves
-    angles_arr = np.arange(40.0, 75.1, 0.2)
-    errors_arr = [opt.compute_error_margin(a, h) for a in angles_arr]
-    
-    # Generate and display plot
-    fig_error = viz.plot_error_function(angles_arr, np.array(errors_arr), best_theta, chosen_theta, h)
+
+    with st.spinner("Computing error margin curve..."):
+        angles_arr, errors_arr = cached_error_curve(h)
+        fig_error = viz.plot_error_function(
+            angles_arr, errors_arr, best_theta, chosen_theta, h
+        )
     st.pyplot(fig_error)
-    
+
     # Show optimization statistics
     col_opt1, col_opt2, col_opt3 = st.columns(3)
+    chosen_margin = opt.compute_error_margin(chosen_theta, h)
     with col_opt1:
         st.markdown(
             f"""
-            ### 🌟 Optimal Release Angle
-            * Best Release Angle: <span class="highlight">{best_theta:.1f}°</span>
-            * Allowed Error Margin: <span class="highlight">±{best_error:.2f}°</span>
-            * Success Range: **{t_low:.1f}° to {t_high:.1f}°**
-            """, 
+            ### \U0001f31f Optimal Release Angle
+            * Best Release Angle: <span class="highlight">{best_theta:.1f}\u00b0</span>
+            * Allowed Error Margin: <span class="highlight">\u00b1{best_error:.2f}\u00b0</span>
+            * Success Range: **{t_low:.1f}\u00b0 to {t_high:.1f}\u00b0**
+            """,
             unsafe_allow_html=True
         )
     with col_opt2:
+        if chosen_margin > 0:
+            margin_str = f"\u00b1{chosen_margin:.2f}\u00b0"
+        else:
+            margin_str = "0.0\u00b0 (Misses at this angle)"
         st.markdown(
             f"""
-            ### 📐 Your Selected Angle
-            * Selected Angle: <span class="highlight">{chosen_theta:.1f}°</span>
-            * Allowed Error Margin: <span class="highlight">±{opt.compute_error_margin(chosen_theta, h):.2f}°</span>
-            """ if opt.compute_error_margin(chosen_theta, h) > 0 else
-            f"""
-            ### 📐 Your Selected Angle
-            * Selected Angle: <span class="highlight">{chosen_theta:.1f}°</span>
-            * Allowed Error Margin: <span class="highlight">0.0° (Misses at this angle)</span>
+            ### \U0001f4d0 Your Selected Angle
+            * Selected Angle: <span class="highlight">{chosen_theta:.1f}\u00b0</span>
+            * Allowed Error Margin: <span class="highlight">{margin_str}</span>
             """,
             unsafe_allow_html=True
         )
     with col_opt3:
         st.markdown(
             """
-            ### 💡 Physics Insight
-            Taller shooters release the ball closer to the height of the hoop, requiring a lower release angle 
-            and lower velocity. This flatter trajectory actually increases the size of the target hoop relative 
+            ### \U0001f4a1 Physics Insight
+            Taller shooters release the ball closer to the height of the hoop, requiring a lower release angle
+            and lower velocity. This flatter trajectory actually increases the size of the target hoop relative
             to the incoming ball angle, providing a larger margin for error!
             """
         )
@@ -309,11 +350,17 @@ with tab3:
         "The green zone in this heatmap shows all combinations of **Release Angle** and **Release Velocity** "
         "that result in a successful free throw. The **dark green line** shows the center-hoop shots."
     )
-    
-    # Generate and display the feasible region plot
-    fig_feasible = viz.plot_feasible_region(h, chosen_theta, chosen_v0, best_theta, best_v0)
+
+    with st.spinner(
+        "Building feasible region map \u2014 evaluating every angle \u00d7 velocity combination..."
+    ):
+        grid_angles, grid_velocities, success_grid = cached_feasible_grid(h)
+        fig_feasible = viz.plot_feasible_region(
+            h, chosen_theta, chosen_v0, best_theta, best_v0,
+            grid_angles, grid_velocities, success_grid
+        )
     st.pyplot(fig_feasible)
-    
+
     st.markdown(
         """
         ### Interpreting the Heatmap
@@ -329,10 +376,10 @@ with tab4:
         "This table compares the optimal release parameters and allowable margins of error "
         "for shooters of different heights, ranging from 5'0\" to 7'3\"."
     )
-    
-    # Retrieve the table data
-    table_raw = opt.get_optimal_heights_table()
-    
+
+    with st.spinner("Calculating optimal parameters for all heights..."):
+        table_raw = cached_heights_table()
+
     # Convert to pandas DataFrame for pretty rendering
     df = pd.DataFrame(table_raw)
     
