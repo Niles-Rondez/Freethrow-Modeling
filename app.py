@@ -21,6 +21,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Initialize session state defaults
+if "chosen_theta" not in st.session_state:
+    st.session_state["chosen_theta"] = 52.0
+if "apply_optimal" not in st.session_state:
+    st.session_state["apply_optimal"] = False
+
 # Custom CSS for modern styling and matching orange theme
 st.markdown("""
 <style>
@@ -111,13 +117,19 @@ st.sidebar.markdown(
 st.sidebar.markdown("---")
 st.sidebar.subheader("Shot Parameters")
 
-# Release angle slider
+# If the 'Apply Optimal' button was clicked last run, update the angle
+# BEFORE the slider is instantiated — this is the only safe moment to do so.
+if st.session_state["apply_optimal"]:
+    st.session_state["chosen_theta"] = st.session_state.pop("_pending_theta")
+    st.session_state["apply_optimal"] = False
+
+# Release angle slider (bound to session state key)
 chosen_theta = st.sidebar.slider(
-    "Release Angle (θ₀)", 
-    min_value=30.0, 
-    max_value=80.0, 
-    value=52.0, 
+    "Release Angle (θ₀)",
+    min_value=30.0,
+    max_value=80.0,
     step=0.5,
+    key="chosen_theta",
     help="Angle of release in degrees from horizontal."
 )
 
@@ -155,26 +167,12 @@ best_theta, best_error, best_v0, t_low, t_high = opt.find_optimal_angle(h)
 # Quick Sidebar Action
 st.sidebar.markdown("---")
 if st.sidebar.button("🎯 Apply Optimal Angle & Speed"):
-    st.session_state["height_ft"] = ft
-    st.session_state["height_in"] = inch
-    st.sidebar.info(f"Updated release angle to optimal: **{best_theta:.1f}°**")
-    # Streamlit rerun is handled on next interaction, but we can set parameter query values
-    # Actually, we can just use st.rerun() if they click the button to apply optimal values!
-    # Let's save to session state to overwrite the release angle slider default
-    st.session_state["chosen_theta_slider"] = best_theta
+    # Store the desired value in a staging key and set the flag.
+    # The actual session state update happens BEFORE the slider renders
+    # on the next rerun, avoiding the post-instantiation write error.
+    st.session_state["_pending_theta"] = best_theta
+    st.session_state["apply_optimal"] = True
     st.rerun()
-
-# Check for session state override
-if "chosen_theta_slider" in st.session_state:
-    # If the user changed the slider manually, delete the session state to allow updates
-    # Wait, we can set the value parameter of the slider to match session state!
-    pass
-
-# Adjust slider value dynamically if override in session state
-if "chosen_theta_slider" in st.session_state:
-    chosen_theta = st.session_state["chosen_theta_slider"]
-    # Remove from session state so user can change it again
-    del st.session_state["chosen_theta_slider"]
 
 
 # ----------------- CALCULATIONS -----------------
