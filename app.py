@@ -134,57 +134,7 @@ st.markdown("""
     .stTabs {
         background-color: var(--bg-light);
     }
-    @media (prefers-color-scheme: dark) {
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-        }
-        .stTabs {
-            background-color: var(--bg-dark);
-        }
-        .stTabs > div {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-        }
-        .stTabs {
-            background-color: var(--bg-dark);
-        }
-        .stTabs * {
-            background-color: var(--bg-dark) !important;
-            color: var(--text-dark) !important;
-        }
-        .main {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-        }
-        .main {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-        }
-        .stApp {
-            color: var(--text-dark);
-            background-color: var(--bg-dark);
-        }
-        h1, h2, h3 {
-            color: var(--text-dark) !important;
-        }
-        section[data-testid="stSidebar"] {
-            background-color: var(--sidebar-dark);
-        }
-        .success-box {
-            background-color: #155724;
-            border-left: 5px solid #28a745;
-            color: #d4edda;
-        }
-        .fail-box {
-            background-color: #721c24;
-            border-left: 5px solid #dc3545;
-            color: #f8d7da;
-        }
-        .stTabs {
-            background-color: var(--bg-dark);
-        }
-    }
+/* Dark mode disabled */
 </style>
 """, unsafe_allow_html=True)
 
