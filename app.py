@@ -69,9 +69,8 @@ if "apply_optimal" not in st.session_state:
 # Custom CSS for modern styling and matching orange theme
 st.markdown("""
 <style>
-    .main {
-        background-color: #f8f9fa;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+
     .stApp {
         font-family: 'Outfit', 'Inter', sans-serif;
     }
@@ -81,6 +80,7 @@ st.markdown("""
         font-weight: 800;
         margin-bottom: 0.2rem;
     }
+    /* Light mode */
     h2 {
         color: #2c3e50;
         font-weight: 600;
@@ -89,12 +89,7 @@ st.markdown("""
         color: #34495e;
         font-weight: 600;
     }
-    /* Styling sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: #f1f3f5;
-        border-right: 1px solid #dee2e6;
-    }
-    /* Results boxes */
+    /* Results boxes — light mode defaults */
     .success-box {
         padding: 1.5rem;
         background-color: #d4edda;
@@ -119,6 +114,54 @@ st.markdown("""
     .highlight {
         color: #d9531e;
         font-weight: 700;
+    }
+
+    /* ---- Dark mode overrides ---- */
+    @media (prefers-color-scheme: dark) {
+        h2 { color: #c8d6e5; }
+        h3 { color: #a8b9cc; }
+        .success-box {
+            background-color: #1a3a27;
+            border-left-color: #28a745;
+            color: #75d49b;
+        }
+        .success-box span {
+            color: #75d49b !important;
+        }
+        .fail-box {
+            background-color: #3a1a1e;
+            border-left-color: #dc3545;
+            color: #f5a0a8;
+        }
+        .fail-box span {
+            color: #f5a0a8 !important;
+        }
+    }
+
+    /* ---- Streamlit dark theme class-based override (for when OS is light but Streamlit is set to dark) ---- */
+    [data-theme="dark"] h2,
+    .stApp[data-theme="dark"] h2 { color: #c8d6e5; }
+    [data-theme="dark"] h3,
+    .stApp[data-theme="dark"] h3 { color: #a8b9cc; }
+    [data-theme="dark"] .success-box,
+    .stApp[data-theme="dark"] .success-box {
+        background-color: #1a3a27;
+        border-left-color: #28a745;
+        color: #75d49b;
+    }
+    [data-theme="dark"] .success-box span,
+    .stApp[data-theme="dark"] .success-box span {
+        color: #75d49b !important;
+    }
+    [data-theme="dark"] .fail-box,
+    .stApp[data-theme="dark"] .fail-box {
+        background-color: #3a1a1e;
+        border-left-color: #dc3545;
+        color: #f5a0a8;
+    }
+    [data-theme="dark"] .fail-box span,
+    .stApp[data-theme="dark"] .fail-box span {
+        color: #f5a0a8 !important;
     }
 </style>
 """, unsafe_allow_html=True)
