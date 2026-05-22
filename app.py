@@ -69,80 +69,55 @@ if "apply_optimal" not in st.session_state:
 # Custom CSS for modern styling and matching orange theme
 st.markdown("""
 <style>
-    /* Force light theme — all colors are hard-coded light values */
-    html, body, .stApp, .main, [data-testid="stAppViewContainer"] {
-        background-color: #f8f9fa !important;
-        color: #212529 !important;
+    .main {
+        background-color: #f8f9fa;
     }
     .stApp {
         font-family: 'Outfit', 'Inter', sans-serif;
     }
-    /* Headings */
+    /* Main titles */
     h1 {
         color: #d9531e !important;
         font-weight: 800;
         margin-bottom: 0.2rem;
     }
     h2 {
-        color: #2c3e50 !important;
+        color: #2c3e50;
         font-weight: 600;
     }
     h3 {
-        color: #34495e !important;
+        color: #34495e;
         font-weight: 600;
     }
-    /* General text */
-    p, li, span, label, div {
-        color: #212529;
-    }
-    /* Sidebar */
-    section[data-testid="stSidebar"], section[data-testid="stSidebar"] * {
-        background-color: #f1f3f5 !important;
-        color: #212529 !important;
+    /* Styling sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #f1f3f5;
         border-right: 1px solid #dee2e6;
     }
-    /* Tabs */
-    .stTabs, .stTabs * {
-        background-color: #f8f9fa !important;
-        color: #212529 !important;
-    }
-    /* Tab buttons */
-    button[data-baseweb="tab"] {
-        color: #212529 !important;
-        background-color: transparent !important;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: #d9531e !important;
-        border-bottom-color: #d9531e !important;
-    }
-    /* Metric labels and values */
-    [data-testid="metric-container"] label,
-    [data-testid="metric-container"] div {
-        color: #212529 !important;
-    }
-    /* Success / fail banners */
+    /* Results boxes */
     .success-box {
         padding: 1.5rem;
-        background-color: #d4edda !important;
+        background-color: #d4edda;
         border-left: 5px solid #28a745;
         border-radius: 0.5rem;
-        color: #155724 !important;
+        color: #155724;
         font-weight: 600;
         font-size: 1.1rem;
         margin-bottom: 1rem;
     }
     .fail-box {
         padding: 1.5rem;
-        background-color: #f8d7da !important;
+        background-color: #f8d7da;
         border-left: 5px solid #dc3545;
         border-radius: 0.5rem;
-        color: #721c24 !important;
+        color: #721c24;
         font-weight: 600;
         font-size: 1.1rem;
         margin-bottom: 1rem;
     }
+    /* Highlight variables */
     .highlight {
-        color: #d9531e !important;
+        color: #d9531e;
         font-weight: 700;
     }
 </style>
