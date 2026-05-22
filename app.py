@@ -146,6 +146,17 @@ st.markdown("""
             background-color: var(--bg-dark);
             color: var(--text-dark);
         }
+        .stTabs {
+            background-color: var(--bg-dark);
+        }
+        .stTabs * {
+            background-color: var(--bg-dark) !important;
+            color: var(--text-dark) !important;
+        }
+        .main {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
         .main {
             background-color: var(--bg-dark);
             color: var(--text-dark);
