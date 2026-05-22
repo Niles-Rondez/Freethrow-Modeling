@@ -69,13 +69,23 @@ if "apply_optimal" not in st.session_state:
 # Custom CSS for modern styling and matching orange theme
 st.markdown("""
 <style>
+    :root {
+        --bg-light: #f8f9fa;
+        --bg-dark: #212529;
+        --sidebar-light: #f1f3f5;
+        --sidebar-dark: #2c2f33;
+        --text-light: #212529;
+        --text-dark: #f8f9fa;
+    }
     .main {
-        background-color: #f8f9fa;
+        background-color: var(--bg-light);
+        color: var(--text-light);
     }
     .stApp {
-        font-family: 'Outfit', 'Inter', sans-serif;
-    }
-    /* Main titles */
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: var(--text-light);
+    background-color: var(--bg-light);
+}
     h1 {
         color: #d9531e !important;
         font-weight: 800;
@@ -89,12 +99,10 @@ st.markdown("""
         color: #34495e;
         font-weight: 600;
     }
-    /* Styling sidebar */
     section[data-testid="stSidebar"] {
-        background-color: #f1f3f5;
+        background-color: var(--sidebar-light);
         border-right: 1px solid #dee2e6;
     }
-    /* Results boxes */
     .success-box {
         padding: 1.5rem;
         background-color: #d4edda;
@@ -115,10 +123,56 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 1rem;
     }
-    /* Highlight variables */
     .highlight {
         color: #d9531e;
         font-weight: 700;
+    }
+    body {
+        background-color: var(--bg-light);
+        color: var(--text-light);
+    }
+    .stTabs {
+        background-color: var(--bg-light);
+    }
+    @media (prefers-color-scheme: dark) {
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .stTabs {
+            background-color: var(--bg-dark);
+        }
+        .stTabs > div {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .main {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .stApp {
+            color: var(--text-dark);
+            background-color: var(--bg-dark);
+        }
+        h1, h2, h3 {
+            color: var(--text-dark) !important;
+        }
+        section[data-testid="stSidebar"] {
+            background-color: var(--sidebar-dark);
+        }
+        .success-box {
+            background-color: #155724;
+            border-left: 5px solid #28a745;
+            color: #d4edda;
+        }
+        .fail-box {
+            background-color: #721c24;
+            border-left: 5px solid #dc3545;
+            color: #f8d7da;
+        }
+        .stTabs {
+            background-color: var(--bg-dark);
+        }
     }
 </style>
 """, unsafe_allow_html=True)
